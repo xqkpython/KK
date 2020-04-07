@@ -1,0 +1,52 @@
+import requests
+import time
+from lxml import etree
+
+def get_html(url):
+
+    headers = {
+        'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                     'AppleWebKit/537.36 (KHTML, like Gecko) '
+                     'Chrome/79.0.3945.130 Safari/537.36'
+    }
+    response = requests.get(url,headers=headers)
+    if response.status_code == 200:
+        response.encoding = 'utf-8'
+        return response.text
+    else:
+        return
+
+def get_infos(html):
+
+    html = etree.HTML(html)
+    infos = html.xpath('//tr[@class="item"]')
+
+    for info in infos:
+
+        name = info.xpath('./td[2]/div[1]/a/text()')[0]
+        publish_info = info.xpath('./td[2]/p[1]/text()')[0]
+        score = info.xpath('./td[2]/div[2]/span[2]/text()')[0]
+        comment_count = info.xpath('./td[2]/div[2]/span[3]/text()')[0]
+
+        data = {
+            '书名' : name.replace('\n','').replace(' ',''),
+            '出版信息' : publish_info,
+            '评分' : score,
+            '评价人数' : comment_count.replace('\n','').replace(' ',''),
+        }
+        print(data)
+
+
+def main():
+
+    urls = ['https://book.douban.com/top250?start={}'.format(str(i)) for i in range(0,226,25)]
+
+    for url in urls:
+
+        html = get_html(url)
+        get_infos(html)
+        time.sleep(1)
+
+
+if __name__ == '__main__':
+    main()
